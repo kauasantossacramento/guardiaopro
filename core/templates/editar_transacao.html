@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="text-center mb-4">Editar Transação</h1>
+
+<form method="post" class="card p-4 rounded" style="border-radius: 40px;">
+    <div class="mb-3">
+        <label class="form-label">Data da Transação</label>
+        <input type="text" class="form-control" value="{{ transacao.data|date:'d/m/Y' }}" disabled>
+    </div>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class='d-flex justify-content-center align-items-center gap-3'>
+        <button type="submit" class="btn btn-primary rounded-pill">Salvar Alterações</button>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary rounded-pill">Cancelar</a>
+    </div>
+</form>
+{% endblock %}

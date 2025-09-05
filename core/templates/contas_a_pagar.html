@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="text-center mb-4">Contas a Pagar</h2>
+
+
+<!-- Botão para abrir o modal -->
+<div class="text-center mb-4">
+  <button class="btn btn-success rounded-pill" data-bs-toggle="modal" data-bs-target="#modalConta">
+    ➕ Nova Pendência
+  </button>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalConta" tabindex="-1" aria-labelledby="modalContaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalContaLabel">Adicionar Conta a Pagar</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          {{ form.as_p }}
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Tabela de contas -->
+<table class="table table-hover shadow-sm">
+  <thead class="table-dark">
+    <tr>
+      <th>Unidade</th>
+      <th>Instituição</th>
+      <th>Descrição</th>
+      <th>Valor</th>
+      <th>Vencimento</th>
+      <th>Status</th>
+      <th class="text-center">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for conta in contas %}
+    <tr>
+      <td>{{ conta.unidade_pagadora }}</td>
+      <td>{{ conta.instituicao }}</td>
+      <td>{{ conta.descricao }}</td>
+      <td>R${{ conta.valor|floatformat:2 }}</td>
+      <td>{{ conta.vencimento|date:"d/m/Y" }}</td>
+      <td>{{ conta.get_status_display }}</td>
+      <td class="text-center">
+        <a href="{% url 'marcar_como_paga' conta.id %}" class="btn btn-sm btn-outline-success" title="Marcar como paga">💸</a>
+        <a href="{% url 'excluir_conta' conta.id %}" class="btn btn-sm btn-outline-danger" title="Excluir pendência" onclick="return confirm('Deseja realmente excluir esta pendência?');">🗑️</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" class="text-center text-muted">Nenhuma pendência cadastrada.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

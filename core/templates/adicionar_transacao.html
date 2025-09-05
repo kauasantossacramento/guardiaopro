@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block breadcrumb %}
+  {% with page_title="Adicionar Transação" %}
+    {{ block.super }}
+  {% endwith %}
+{% endblock %}
+
+{% block content %}
+
+
+<h1 class="text-center mb-4">Adicionar Transação</h1>
+
+<form method="post" enctype="multipart/form-data" class="card p-4 rounded">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <label for="id_documentos" class="form-label">Documentos Comprobatórios</label>
+    <input type="file" name="documentos" id="id_documentos" multiple class="form-control mb-3">
+
+    <button type="submit" class="btn btn-primary rounded-pill">Salvar</button>
+</form>
+
+<div class="col-4 mt-2 d-grid">
+        <a href="{% url 'importar_csv' %}" class="btn" style='border: 1px solid grey;' aria-label="Importar dados via CSV">
+            <i class="bi bi-upload"></i> Importar CSV
+        </a>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var tipoSelect = document.querySelector('#id_tipo');
+    var categoriaSelect = document.querySelector('#id_categoria');
+
+    tipoSelect.addEventListener('change', function() {
+        var tipo = this.value;
+        fetch(`/get-categorias/?tipo=${tipo}`)
+            .then(response => response.json())
+            .then(data => {
+                categoriaSelect.innerHTML = '<option value="">Selecione uma categoria</option>';
+                data.forEach(item => {
+                    var option = document.createElement('option');
+                    option.value = item.id;
+                    option.text = item.nome;
+                    categoriaSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Erro ao carregar categorias:', error));
+    });
+});
+</script>
+{% endblock %}

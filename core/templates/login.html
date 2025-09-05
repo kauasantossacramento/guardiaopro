@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center align-items-center min-vh-75">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-5">
+      <div class="card shadow-lg border-0 rounded">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-center">
+            <img style='width: 30vw;' src="{% static 'imagens/logo_kaua.png' %}"> 
+          </div> 
+          
+          {% if form.errors %}
+            <div class="alert alert-danger">
+              <strong>Erro:</strong> Verifique os campos e tente novamente.
+            </div>
+          {% endif %}
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="mb-3">
+              {{ form.username.label_tag }}
+              {{ form.username }}
+            </div>
+            <div class="mb-3">
+              {{ form.password.label_tag }}
+              {{ form.password }}
+            </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary rounded-pill">
+                <i class="bi bi-box-arrow-in-right"></i> Entrar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

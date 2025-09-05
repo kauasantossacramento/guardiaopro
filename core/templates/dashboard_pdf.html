@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        h1 { text-align: center; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        ul { list-style-type: none; padding: 0; }
+        li { margin-bottom: 10px; }
+        .logo { position: absolute; top: 20px; left: 20px; width: 100px; height: auto; }
+    </style>
+</head>
+<body>
+    <h1>Relatório de Finanças - {{ mes|default:"Todos" }}/{{ ano|default:"Todos" }}</h1>
+
+    <!-- Totais por mês -->
+    <h3>Totais Mensais</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Mês</th>
+                <th>Entradas (R$)</th>
+                <th>Saídas (R$)</th>
+                <th>Saldo (R$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mes, totais in totais_mensais.items %}
+            <tr>
+                <td>{{ mes }}</td>
+                <td>{{ totais.entradas|floatformat:2 }}</td>
+                <td>{{ totais.saidas|floatformat:2 }}</td>
+                <td>{{ totais.saldo|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">Nenhum dado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Lista de transações -->
+    <h3>Transações</h3>
+    <ul>
+        {% for transacao in transacoes %}
+        <li>
+            {{ transacao.tipo|upper }} - R$ {{ transacao.valor|floatformat:2 }} - {{ transacao.data|date:"d/m/Y" }}
+            {% if transacao.pagador %}(Pagador: {{ transacao.pagador.nome }}){% elif transacao.emitente %}(Emitente: {{ transacao.emitente.nome }}){% endif %}
+        </li>
+        {% empty %}
+        <li>Nenhuma transação.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

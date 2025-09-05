@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="text-center mb-4">Relatório Mensal - {{ mes }}</h1>
+<p><strong>Total Entradas:</strong> R$ {{ entradas|floatformat:2 }}</p>
+<p><strong>Total Saídas:</strong> R$ {{ saidas|floatformat:2 }}</p>
+<p><strong>Saldo:</strong> R$ {{ saldo|floatformat:2 }}</p>
+
+<h3>Transações</h3>
+<ul class="list-group">
+    {% for transacao in transacoes %}
+    <li class="list-group-item rounded mb-2">
+        {{ transacao.tipo|upper }} - R$ {{ transacao.valor|floatformat:2 }} - {{ transacao.data|date:"d/m/Y" }}
+        {% if transacao.pagador %}(Pagador: {{ transacao.pagador.nome }}){% elif transacao.emitente %}(Emitente: {{ transacao.emitente.nome }}){% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

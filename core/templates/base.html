@@ -1,0 +1,121 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanças Rádio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .card { border-radius: 15px; }
+        .img-thumbnail { border-radius: 50%; width: 40px; height: 40px; }
+        input[type="DateInput"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        select, textarea, input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .capa-img {
+            width: 50vw;
+            margin-top: 15px;
+        }
+        .capa-container {
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            margin-bottom: -15px;
+        }
+
+        @media (max-width: 860px){
+            .capa-img {
+                width: 90vw;
+                height: auto;
+                display: block;
+                object-fit: cover;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+
+        <!-- Capa com overlay de usuário e logout -->
+    <div class="position-relative capa-container">
+    <img src="{% static 'imagens/capa_finan.png' %}" alt="Imagem de capa" class="capa-img m-5 mb-0">
+
+    {% if request.user.is_authenticated %}
+        <!-- Overlay superior -->
+        <div class="position-absolute top-0 start-0 p-3 text-white d-flex align-items-center gap-2">
+        <i class="bi bi-person-circle fs-4" style="color: black"></i>
+        <span class="fw-semibold" style="color: black">
+            Olá, {{ request.user.first_name|default:request.user.username }}
+        </span>
+        </div>
+
+        <div class="position-absolute top-0 end-0 p-3">
+        <a href="{% url 'sair' %}" onclick="return confirm('Deseja realmente sair?');"
+            class="btn btn-outline-light btn-sm rounded-pill d-flex align-items-center gap-1" style="color: black">
+            <i class="bi bi-box-arrow-right" style="color: black"></i> Sair
+        </a>
+        </div>
+    {% endif %}
+    </div>
+    <!--
+    <div class="capa-container">
+        <img src="{% static 'imagens/capa_finan.png' %}" alt="Imagem de capa" class="capa-img">
+    </div> -->
+
+    <!-- Breadcrumb -->
+    {% block breadcrumb %}
+    <div class="container mt-3 d-flex justify-content-center mb-0" style="margin-bottom: -30px !important;">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'dashboard' %}" class="text-muted">🏠 Início</a>
+                </li>
+                {% if page_title %}
+                <li class="breadcrumb-item active text-dark" aria-current="page">
+                    {{ page_title }}
+                </li>
+                {% endif %}
+            </ol>
+        </nav>
+    </div>
+    {% endblock %}
+
+    <!-- Conteúdo principal -->
+    <div class="container mt-4">
+        {% block content %}
+        <!-- Conteúdo será inserido aqui -->
+        {% endblock %}
+    </div>
+    <div class="d-flex align-items-center justify-content-center">
+        <img style='width: 30vw; margin-bottom: -20px; margin-top: 20px; opacity: 70%;' src="{% static 'imagens/logo_kaua.png' %}"> 
+    </div> 
+    <!-- Rodapé -->
+    <p style="text-align: center; color: grey; margin-top: 20px; font-size: 11px">
+        Desenvolvido por KS TEC | 62.501.281/0001-13
+    </p>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

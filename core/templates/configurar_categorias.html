@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block breadcrumb %}
+  {% with page_title="Configurar Categorias" %}
+    {{ block.super }}
+  {% endwith %}
+{% endblock %}
+
+
+{% block content %}
+<h1 class="text-center mb-4">Configurar Categorias</h1>
+
+<h3>Adicionar Categoria</h3>
+<form method="post" class="card p-4 rounded mb-4">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary rounded-pill">Adicionar</button>
+</form>
+
+<h3>Lista de Categorias</h3>
+<ul class="list-group">
+    {% for categoria in categorias %}
+    <li class="list-group-item rounded mb-2">{{ categoria.nome }} ({{ categoria.tipo|upper }})</li>
+    {% empty %}
+    <li class="list-group-item">Nenhuma categoria.</li>
+    {% endfor %}
+</ul>
+{% endblock %}
