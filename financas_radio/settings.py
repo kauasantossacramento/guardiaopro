@@ -11,7 +11,7 @@ SECRET_KEY = 'your-secret-key-here'  # Replace with a secure key in production
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['valencafm.guardiao.pro']
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
