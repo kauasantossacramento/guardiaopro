@@ -114,7 +114,7 @@
                             {% endif %}
                         {% endfor %}
                     </select>
-                </div>             
+                </div>
                 <!--
                 <div class="col-md-3">
                     <label class="form-label">Data Início</label>
@@ -127,26 +127,26 @@
                            value="{{ form.data_fim.value|date:'Y-m-d' }}">
                 </div>
                 -->
-            <div class="d-flex align-items-center justify-content-center gap-4">
-            <div class="col-md-3 d-grid">
-                <button type="submit" class="btn btn-primary mt-md-4" aria-label="Filtrar por mês e ano">
-                <i class="bi bi-funnel-fill"></i> Filtrar
-                </button>
-            </div>
-            <div class="col-md-3 d-grid">
-                <a href="{% url 'adicionar_transacao' %}" class="btn btn-success mt-md-4" aria-label="Adicionar nova transação">
-                <i class="bi bi-plus-circle"></i> Transação
-                </a>
-            </div>
-            <div class="col-md-3 d-grid">
-                <a href="{% url 'contas_a_pagar' %}" class="btn btn-danger mt-md-4" aria-label="Visualizar contas a pagar">
-                <i class="bi bi-receipt"></i> Contas a Pagar
-                </a>
-            </div>
-            </div>
+                <div class="row justify-content-center g-3">
+                  <div class="col-12 col-md-3 d-grid">
+                    <button type="submit" class="btn btn-primary" aria-label="Filtrar por mês e ano">
+                      <i class="bi bi-funnel-fill"></i> Filtrar
+                    </button>
+                  </div>
+                  <div class="col-12 col-md-3 d-grid">
+                    <a href="{% url 'adicionar_transacao' %}" class="btn btn-success" aria-label="Adicionar nova transação">
+                      <i class="bi bi-plus-circle"></i> Transação
+                    </a>
+                  </div>
+                  <div class="col-12 col-md-3 d-grid">
+                    <a href="{% url 'contas_a_pagar' %}" class="btn btn-danger" aria-label="Visualizar contas a pagar">
+                      <i class="bi bi-receipt"></i> Contas a Pagar
+                    </a>
+                  </div>
+                </div>
             </form>
 
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3 mt-3 px-2">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3 mt-3 px-2 d-flex justify-content-center align-items-center">
             <div class="col d-grid">
                 <a href="{% url 'configurar_categorias' %}" class="btn" style="border: 1px solid grey;" aria-label="Configurar categorias">
                 ⚙️ Categorias
@@ -159,8 +159,8 @@
             </div>
             <div class="col d-grid">
                 <a href="/exportar-pdf/?mes={{ form.mes.value|default:'' }}&ano={{ form.ano.value|default:'' }}"
-                class="btn" style="border: 1px solid grey;" aria-label="Exportar relatório em PDF">
-                ⬇️ Exportar PDF
+                   class="btn" style="border: 1px solid grey;" aria-label="Exportar relatório em PDF">
+                   ⬇️ Exportar PDF
                 </a>
             </div>
             <div class="col d-grid">

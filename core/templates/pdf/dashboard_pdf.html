@@ -1,0 +1,95 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 0; }
+        h1, h2 { color: #333; margin-top: 30px; }
+        .logo { width: 160px; margin-bottom: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .widgets { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        .widget { flex: 1; margin: 0 10px; padding: 15px; border-radius: 8px; text-align: center; }
+        .entrada { background-color: #d4edda; }
+        .saida { background-color: #f8d7da; }
+        .saldo { background-color: #d1ecf1; }
+        .widget h4 { margin-bottom: 10px; font-size: 16px; }
+        .widget p { font-size: 26px; font-weight: bold; margin: 0; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+        th { background-color: #f0f0f0; }
+        .logo-img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        {% if emitente.logo %}
+            <img style='width: 300px;'src="{{ emitente.logo.url }}" alt="Logo {{ emitente.nome }}" class="logo">
+        {% endif %}
+        <h1>Relatório de Transações</h1>
+        <p><strong>Emitente:</strong> {{ emitente.nome }}</p>
+        <p><strong>Período:</strong> {{ mes }}/{{ ano }}</p>
+        <p><strong>Gerado em:</strong> {{ data_geracao }} pelo sistema Guardião Financeiro </p>
+
+    </div>
+
+    <!-- Totais Mensais -->
+    <div class="widgets">
+        <div style='display: flex; flex-direction: column; align-items: center; justify-content: center' class="widget entrada">
+            <h4 style='margin-top: -4px;'>Entradas</h4>
+            <p style='font-size: 18px;'>R$ {{ entradas_ultimo_mes|floatformat:"2"|intcomma }}</p>
+        </div>
+        <div style='display: flex; flex-direction: column; align-items: center; justify-content: center' class="widget saida">
+            <h4 style='margin-top: -4px;'>Saídas</h4>
+            <p style='font-size: 18px;'>R$ {{ saidas_ultimo_mes|floatformat:"2"|intcomma }}</p>
+        </div>
+        <div style='display: flex; flex-direction: column; align-items: center; justify-content: center' class="widget saldo">
+            <h4 style='margin-top: -4px;'>Saldo</h4>
+            <p style='font-size: 18px;'>R$ {{ saldo_ultimo_mes|floatformat:"2"|intcomma }}</p>
+        </div>
+    </div>
+
+    <!-- Entradas -->
+    <h2>Entradas</h2>
+    <table>
+        <thead>
+            <tr><th>Data</th><th>Valor</th><th>Descrição</th><th>Fonte</th></tr>
+        </thead>
+        <tbody>
+            {% for transacao in entradas %}
+            <tr>
+                <td>{{ transacao.data|date:"d/m/Y" }}</td>
+                <td>R$ {{ transacao.valor|floatformat:"2"|intcomma }}</td>
+                <td>{{ transacao.descricao|default:"Sem descrição" }}</td>
+                <td>{{ transacao.pagador.nome|default:"Nenhum" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Saídas -->
+    <h2>Saídas</h2>
+    <table>
+        <thead>
+            <tr><th></th><th>Data</th><th>Valor</th><th>Descrição</th><th>Pagador</th></tr>
+        </thead>
+        <tbody>
+            {% for transacao in saidas %}
+            <tr>
+                <td style='color: white;'>
+                    {% if transacao.pagador.logo %}
+                        <img src="{{ transacao.pagador.logo.url }}" alt="Logo {{ transacao.pagador.nome }}" class="logo-img">
+                    {% else %}
+                        <span style="color: #888;">—</span>
+                    {% endif %}
+                </td>
+                <td>{{ transacao.data|date:"d/m/Y" }}</td>
+                <td>R$ {{ transacao.valor|floatformat:"2"|intcomma }}</td>
+                <td>{{ transacao.descricao|default:"Sem descrição" }}</td>
+                <td>{{ transacao.pagador.nome|default:"Nenhum" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

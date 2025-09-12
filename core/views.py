@@ -17,7 +17,7 @@ import io
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-
+from http import HTTPStatus
 
 # Configurar logging
 logging.basicConfig(level=logging.DEBUG)
@@ -152,6 +152,7 @@ from .forms import ImportarCSVForm
 import csv
 from io import TextIOWrapper, StringIO, BytesIO
 
+'''
 @login_required
 def importar_csv(request):
     if request.method == 'POST':
@@ -226,16 +227,108 @@ def importar_csv(request):
         form = ImportarCSVForm()
 
     return render(request, 'importar_csv.html', {'form': form})
+'''
 
+@login_required
+def importar_csv(request):
+    if request.method == 'POST':
+        form = ImportarCSVForm(request.POST, request.FILES)
+        if form.is_valid():
+            csv_file = request.FILES.get('csv_file')
+            if not csv_file:
+                messages.error(request, 'Nenhum arquivo foi enviado.')
+                return render(request, 'importar_csv.html', {'form': form})
 
+            file_content = csv_file.read()
+            encodings = ['utf-8', 'windows-1252', 'latin-1']
+            decoded_content = None
 
+            for encoding in encodings:
+                try:
+                    decoded_content = TextIOWrapper(BytesIO(file_content), encoding=encoding).read()
+                    break
+                except UnicodeDecodeError:
+                    continue
+
+            if decoded_content is None:
+                messages.error(request, 'Não foi possível decodificar o arquivo CSV. Verifique a codificação.')
+                return render(request, 'importar_csv.html', {'form': form})
+
+            csv_file = StringIO(decoded_content)
+            reader = csv.DictReader(csv_file)
+
+            linhas_processadas = 0
+            atualizadas = 0
+            duplicadas = 0
+            erros = []
+
+            for i, row in enumerate(reader, start=1):
+                try:
+                    tipo = row.get('tipo', '').strip().lower()
+                    categoria_nome = row.get('categoria', '').strip()
+                    pagador_nome = row.get('pagador', '').strip()
+                    valor_str = row.get('valor', '0').replace(',', '.').strip()
+                    valor = float(valor_str)
+                    data_str = row.get('data', datetime.datetime.now().strftime('%d/%m/%Y')).strip()
+                    data = datetime.datetime.strptime(data_str, '%d/%m/%Y').date()
+                    descricao = row.get('descricao', '').strip()
+
+                    if not tipo or not categoria_nome or not pagador_nome:
+                        raise ValueError(f"Dados obrigatórios ausentes na linha {i}")
+
+                    categoria, _ = Categoria.objects.get_or_create(nome=categoria_nome, tipo=tipo)
+
+                    pagador = Pagador.objects.filter(nome=pagador_nome).first()
+                    if not pagador:
+                        pagador = Pagador.objects.create(nome=pagador_nome)
+
+                    transacao_existente = Transacao.objects.filter(
+                        pagador=pagador,
+                        valor=valor,
+                        data=data
+                    ).first()
+
+                    if transacao_existente:
+                        if not transacao_existente.descricao and descricao:
+                            transacao_existente.descricao = descricao
+                            transacao_existente.save()
+                            atualizadas += 1
+                        else:
+                            duplicadas += 1
+                        continue
+
+                    Transacao.objects.create(
+                        tipo=tipo,
+                        valor=valor,
+                        data=data,
+                        descricao=descricao,
+                        categoria=categoria,
+                        pagador=pagador
+                    )
+                    linhas_processadas += 1
+
+                except Exception as e:
+                    erros.append(f"Linha {i}: {str(e)}")
+
+            if erros or duplicadas or atualizadas:
+                messages.warning(request, f"{linhas_processadas} novas transações importadas. {atualizadas} atualizadas. {duplicadas} duplicadas ignoradas. {len(erros)} erros.")
+                for erro in erros:
+                    messages.error(request, erro)
+            else:
+                messages.success(request, f"Todos os dados ({linhas_processadas}) foram importados com sucesso!")
+
+            return redirect('dashboard')
+    else:
+        form = ImportarCSVForm()
+
+    return render(request, 'importar_csv.html', {'form': form})
 
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 
 def sair(request):
     logout(request)
-    return redirect('login') 
+    return redirect('login')
 
 @login_required
 def dashboard(request):
@@ -282,15 +375,16 @@ def dashboard(request):
                     categoria_saidas[int(cid)] = saidas_categoria
 
             # Últimas transações
+            # Últimas transações ordenadas por data crescente
             if tipo == 'entrada':
-                ultimas_entradas = transacoes.filter(tipo='entrada')
+                ultimas_entradas = transacoes.filter(tipo='entrada').order_by('data')
                 ultimas_saidas = []
             elif tipo == 'saida':
-                ultimas_saidas = transacoes.filter(tipo='saida')
+                ultimas_saidas = transacoes.filter(tipo='saida').order_by('data')
                 ultimas_entradas = []
             else:
-                ultimas_entradas = transacoes.filter(tipo='entrada')
-                ultimas_saidas = transacoes.filter(tipo='saida')
+                ultimas_entradas = transacoes.filter(tipo='entrada').order_by('data')
+                ultimas_saidas = transacoes.filter(tipo='saida').order_by('data')
 
     context = {
         'form': form,
@@ -313,7 +407,7 @@ def relatorio_mensal(request, ano, mes):
     entradas = transacoes.filter(tipo='entrada').aggregate(total=Sum('valor'))['total'] or 0
     saidas = transacoes.filter(tipo='saida').aggregate(total=Sum('valor'))['total'] or 0
     saldo = entradas - saidas
-    
+
     context = {
         'transacoes': transacoes,
         'entradas': entradas,
@@ -321,26 +415,37 @@ def relatorio_mensal(request, ano, mes):
         'saldo': saldo,
         'mes': f"{mes}/{ano}",
     }
-    
+
     return render(request, 'relatorio.html', context)
+
 
 @login_required
 def adicionar_transacao(request):
     if request.method == 'POST':
         form = TransacaoForm(request.POST)
-        arquivos = request.FILES.getlist('documentos')  # Captura múltiplos arquivos enviados
+        arquivos = request.FILES.getlist('documentos')
 
         if form.is_valid():
-            transacao = form.save()
+            transacao = form.save(commit=False)
 
-            # Salva cada documento vinculado à transação
+            nome_pagador = request.POST.get('outro_pagador')
+            if nome_pagador:
+                pagador_obj, _ = Pagador.objects.get_or_create(nome=nome_pagador)
+                transacao.pagador = pagador_obj
+
+            transacao.save()
+
             for arquivo in arquivos:
                 DocumentoComprobatório.objects.create(transacao=transacao, arquivo=arquivo)
+
+            messages.success(request, 'Transação adicionada com sucesso!')
+
+            if request.POST.get('adicionar_outra') == 'true':
+                return redirect('adicionar_transacao')
 
             return redirect('dashboard')
     else:
         form = TransacaoForm()
-    messages.success(request, 'Transação adicionada com sucesso!')
     return render(request, 'adicionar_transacao.html', {'form': form})
 
 @login_required
@@ -373,6 +478,7 @@ def get_categorias(request):
     categorias = Categoria.objects.filter(tipo=tipo).values('id', 'nome')
     return JsonResponse(list(categorias), safe=False)
 
+'''
 @login_required
 def exportar_pdf(request):
     logger.debug("Entrando na view exportar_pdf")
@@ -538,8 +644,62 @@ def exportar_pdf(request):
     except Exception as e:
         logger.error(f"Erro ao construir o PDF: {str(e)}")
         return HttpResponse(f"Erro ao gerar PDF: {str(e)}", status=500)
+'''
 
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from weasyprint import HTML, CSS
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
+from .models import Transacao, Emitente
+from .forms import FiltroMensalForm
+import datetime
 
+@login_required
+def exportar_pdf(request):
+    form = FiltroMensalForm(request.GET or None)
+    mes = request.GET.get('mes')
+    ano = request.GET.get('ano')
+
+    transacoes = Transacao.objects.all()
+    if mes and ano:
+        transacoes = transacoes.filter(data__month=mes, data__year=ano)
+
+    entradas = transacoes.filter(tipo='entrada')
+    saidas = transacoes.filter(tipo='saida')
+
+    entradas_total = entradas.aggregate(total=Sum('valor'))['total'] or 0
+    saidas_total = saidas.aggregate(total=Sum('valor'))['total'] or 0
+    saldo_total = entradas_total - saidas_total
+
+    emitente = Emitente.get_solo()
+
+    context = {
+        'form': form,
+        'mes': mes,
+        'ano': ano,
+        'entradas': entradas,
+        'saidas': saidas,
+        'entradas_ultimo_mes': entradas_total,
+        'saidas_ultimo_mes': saidas_total,
+        'saldo_ultimo_mes': saldo_total,
+        'data_geracao': datetime.datetime.now().strftime('%d/%m/%Y'),
+        'emitente': emitente,
+        'STATIC_URL': settings.STATIC_URL,
+        'MEDIA_URL': settings.MEDIA_URL,
+    }
+
+    html_string = render_to_string('pdf/dashboard_pdf.html', context)
+    pdf_file = HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf(
+        stylesheets=[CSS(string='@page { size: A4; margin: 2cm }')]
+    )
+
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="dashboard_pdf.pdf"'
+    return response
+
+@login_required
 def transacao_json(request, transacao_id):
     transacao = Transacao.objects.get(id=transacao_id)
     documentos = [
@@ -560,6 +720,7 @@ def transacao_json(request, transacao_id):
     }
     return JsonResponse(data)
 
+@login_required
 def adicionar_comprovante(request, transacao_id):
     transacao = get_object_or_404(Transacao, id=transacao_id)
     if request.method == 'POST':
@@ -569,6 +730,7 @@ def adicionar_comprovante(request, transacao_id):
     query_string = request.META.get('HTTP_REFERER', '')
     return HttpResponseRedirect(query_string or reverse('dashboard'))
 
+@login_required
 def editar_transacao(request, transacao_id):
     transacao = get_object_or_404(Transacao, id=transacao_id)
 
@@ -588,9 +750,19 @@ def editar_transacao(request, transacao_id):
         'transacao': transacao
     })
 
+@login_required
 def anular_transacao(request, transacao_id):
     transacao = get_object_or_404(Transacao, id=transacao_id)
     transacao.delete()
     messages.success(request, 'Transação anulada com sucesso!')
     query_string = request.META.get('HTTP_REFERER', '')
     return HttpResponseRedirect(query_string or reverse('dashboard'))
+
+
+def csrf_failure(request, reason=""):
+    referer = request.META.get("HTTP_REFERER", "/")
+    context = {
+        "referer": referer,
+        "reason": reason,
+    }
+    return render(request, "csrf_failure.html", context, status=HTTPStatus.FORBIDDEN)
