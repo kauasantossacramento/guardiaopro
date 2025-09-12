@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="modal fade show" style="display:block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-danger">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Erro de Segurança</h5>
+      </div>
+      <div class="modal-body">
+        <p>Ocorreu um erro de verificação de segurança (CSRF). Isso pode acontecer se você estiver logando em múltiplas abas ou usando preenchimento automático.</p>
+        <p><strong>Sugestão:</strong> Recarregue a página e tente novamente.</p>
+      </div>
+      <div class="modal-footer">
+        <a href="{{ referer }}" class="btn btn-outline-secondary">Voltar</a>
+        <a href="{% url 'login' %}" class="btn btn-danger">Ir para Login</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

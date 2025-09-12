@@ -7,39 +7,82 @@
 
 {% block content %}
 
-
 <h1 class="text-center mb-4">Adicionar Transação</h1>
 
-<form method="post" enctype="multipart/form-data" class="card p-4 rounded">
+<form id="transacaoForm" method="post" enctype="multipart/form-data" class="card p-4 rounded">
     {% csrf_token %}
-    {{ form.as_p }}
+
+    <div class="mb-3">{{ form.tipo.label_tag }}{{ form.tipo }}</div>
+    <div class="mb-3">{{ form.valor.label_tag }}{{ form.valor }}</div>
+    <div class="mb-3">{{ form.data.label_tag }}{{ form.data }}</div>
+    <div class="mb-3">{{ form.descricao.label_tag }}{{ form.descricao }}</div>
+    <div class="mb-3">{{ form.categoria.label_tag }}{{ form.categoria }}</div>
+
+    <!-- Pagador com opção de outro -->
+    <div class="mb-3">
+        <label for="id_pagador" class="form-label">Pagador / Fornecedor</label>
+        <div class="d-flex align-items-center gap-3">
+            {{ form.pagador }}
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="outroPagadorCheck">
+                <label class="form-check-label" for="outroPagadorCheck">Outro?</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3" id="campoOutroPagador" style="display: none;">
+        <label for="outro_pagador" class="form-label">Nome do Pagador / Fornecedor</label>
+        <input type="text" name="outro_pagador" id="outro_pagador" class="form-control" placeholder="Digite o nome">
+    </div>
 
     <label for="id_documentos" class="form-label">Documentos Comprobatórios</label>
     <input type="file" name="documentos" id="id_documentos" multiple class="form-control mb-3">
 
-    <button type="submit" class="btn btn-primary rounded-pill">Salvar</button>
+    <div class="d-flex justify-content-start gap-3">
+        <button type="submit" class="btn btn-primary rounded-pill">Salvar</button>
+        <button type="button" class="btn btn-outline-success rounded-pill" data-bs-toggle="modal" data-bs-target="#confirmModal">
+            Salvar e Adicionar Outra Transação
+        </button>
+    </div>
 </form>
-
-<div class="col-4 mt-2 d-grid">
-        <a href="{% url 'importar_csv' %}" class="btn" style='border: 1px solid grey;' aria-label="Importar dados via CSV">
-            <i class="bi bi-upload"></i> Importar CSV
-        </a>
+<div class="col-4 mt-4 d-grid">
+    <a href="{% url 'importar_csv' %}" class="btn" style='border: 1px solid grey;' aria-label="Importar dados via CSV">
+        <i class="bi bi-upload"></i> Importar CSV
+    </a>
 </div>
 
+<!-- Modal de confirmação -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmModalLabel">Confirmar Salvamento</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        Deseja salvar esta transação e adicionar outra em seguida?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" id="confirmAddAnother">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var tipoSelect = document.querySelector('#id_tipo');
-    var categoriaSelect = document.querySelector('#id_categoria');
+    const tipoSelect = document.querySelector('#id_tipo');
+    const categoriaSelect = document.querySelector('#id_categoria');
 
     tipoSelect.addEventListener('change', function() {
-        var tipo = this.value;
+        const tipo = this.value;
         fetch(`/get-categorias/?tipo=${tipo}`)
             .then(response => response.json())
             .then(data => {
                 categoriaSelect.innerHTML = '<option value="">Selecione uma categoria</option>';
                 data.forEach(item => {
-                    var option = document.createElement('option');
+                    const option = document.createElement('option');
                     option.value = item.id;
                     option.text = item.nome;
                     categoriaSelect.appendChild(option);
@@ -47,6 +90,32 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => console.error('Erro ao carregar categorias:', error));
     });
+
+    // Lógica para "Salvar e Adicionar Outra"
+    const confirmButton = document.getElementById('confirmAddAnother');
+    const form = document.getElementById('transacaoForm');
+
+    confirmButton.addEventListener('click', function() {
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'adicionar_outra';
+        hiddenInput.value = 'true';
+        form.appendChild(hiddenInput);
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+        modal.hide();
+        form.submit();
+    });
+
+    // Lógica para mostrar campo de pagador manual
+    const outroCheck = document.getElementById('outroPagadorCheck');
+    const campoOutro = document.getElementById('campoOutroPagador');
+
+    if (outroCheck && campoOutro) {
+        outroCheck.addEventListener('change', function() {
+            campoOutro.style.display = this.checked ? 'block' : 'none';
+        });
+    }
 });
 </script>
 {% endblock %}

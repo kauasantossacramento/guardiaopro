@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; }
+        h1, h2 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+        th { background-color: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>Relatório de Transações</h1>
+    <p>Período: {{ mes }}/{{ ano }}</p>
+    <p>Gerado em: {{ data_geracao }}</p>
+
+    <h2>Entradas</h2>
+    <table>
+        <thead>
+            <tr><th>Data</th><th>Valor</th><th>Descrição</th><th>Fonte</th></tr>
+        </thead>
+        <tbody>
+            {% for transacao in entradas %}
+            <tr>
+                <td>{{ transacao.data|date:"d/m/Y" }}</td>
+                <td>R${{ transacao.valor|floatformat:2 }}</td>
+                <td>{{ transacao.descricao|default:"Sem descrição" }}</td>
+                <td>{{ transacao.pagador.nome|default:"Nenhum" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Saídas</h2>
+    <table>
+        <thead>
+            <tr><th>Data</th><th>Valor</th><th>Descrição</th><th>Pagador</th></tr>
+        </thead>
+        <tbody>
+            {% for transacao in saídas %}
+            <tr>
+                <td>{{ transacao.data|date:"d/m/Y" }}</td>
+                <td>R${{ transacao.valor|floatformat:2 }}</td>
+                <td>{{ transacao.descricao|default:"Sem descrição" }}</td>
+                <td>{{ transacao.pagador.nome|default:"Nenhum" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% load static %}
 
 {% block breadcrumb %}
@@ -6,6 +7,8 @@
     {{ block.super }}
   {% endwith %}
 {% endblock %}
+
+{% load formatadores %}
 
 {% block content %}
 <h1 class="text-center mb-4 fw-bold m-2">📊 Relatório Financeiro - {{ ano }}</h1>
@@ -48,7 +51,7 @@
       <div class="card-body text-center">
         <h6 class="text-uppercase text-muted mb-2">Categoria com maior gasto</h6>
         <h4 class="fw-bold text-danger mb-1">{{ categoria_top.categoria__nome }}</h4>
-        <p class="fs-5 text-dark">R${{ categoria_top.total|floatformat:2 }}</p>
+        <p class="fs-5 text-dark">R${{ categoria_top.total|moeda_brasileira }}</p>
       </div>
     </div>
   </div>
@@ -186,4 +189,4 @@ new Chart(document.getElementById('graficoPizza'), {
   }
 });
 </script>
-{% endblock %} 
+{% endblock %}

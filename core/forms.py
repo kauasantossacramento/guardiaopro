@@ -1,9 +1,8 @@
 from django import forms
 from .models import Transacao, Categoria, Pagador
-from django import forms
 from django.core.exceptions import ValidationError
-from django import forms
 from .models import Categoria
+from decimal import Decimal, InvalidOperation
 
 class FiltroMensalForm(forms.Form):
     mes = forms.IntegerField(
@@ -49,6 +48,7 @@ class FiltroMensalForm(forms.Form):
         self.fields['categoria'].choices = [
             (str(cat.id), cat.nome) for cat in Categoria.objects.all()
         ]
+
 class TransacaoForm(forms.ModelForm):
     class Meta:
         model = Transacao
@@ -61,6 +61,7 @@ class TransacaoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['categoria'].queryset = Categoria.objects.none()
         self.fields['pagador'].required = False
+
         if 'tipo' in self.data:
             try:
                 tipo = self.data.get('tipo')
@@ -71,6 +72,20 @@ class TransacaoForm(forms.ModelForm):
             self.fields['categoria'].queryset = Categoria.objects.filter(tipo=self.instance.tipo)
         else:
             self.fields['categoria'].queryset = Categoria.objects.none()  # Fallback vazio até o tipo ser selecionado
+
+    def clean_valor(self):
+        valor = self.cleaned_data.get('valor')
+
+        if isinstance(valor, str):
+            # Remove pontos de milhar e troca vírgula por ponto decimal
+            valor = valor.replace('.', '').replace(',', '.')
+
+            try:
+                valor = Decimal(valor)
+            except InvalidOperation:
+                raise ValidationError("Formato inválido. Use números com vírgula para decimais.")
+
+        return valor
 
 class CategoriaForm(forms.ModelForm):
     class Meta:
